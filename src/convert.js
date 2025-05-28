@@ -55,21 +55,21 @@ export function convert(data, schemaElement, utf8 = true) {
   if (ctype === 'DATE') {
     const arr = new Array(data.length)
     for (let i = 0; i < arr.length; i++) {
-      arr[i] = new Date(data[i] * dayMillis)
+      arr[i] = data[i]
     }
     return arr
   }
   if (ctype === 'TIMESTAMP_MILLIS') {
     const arr = new Array(data.length)
     for (let i = 0; i < arr.length; i++) {
-      arr[i] = new Date(Number(data[i]))
+      arr[i] = Number(data[i])
     }
     return arr
   }
   if (ctype === 'TIMESTAMP_MICROS') {
     const arr = new Array(data.length)
     for (let i = 0; i < arr.length; i++) {
-      arr[i] = new Date(Number(data[i] / 1000n))
+      arr[i] = Number(data[i] / 1000n)
     }
     return arr
   }
@@ -117,7 +117,7 @@ export function convert(data, schemaElement, utf8 = true) {
     if (unit === 'NANOS') factor = 1000000n
     const arr = new Array(data.length)
     for (let i = 0; i < arr.length; i++) {
-      arr[i] = new Date(Number(data[i] / factor))
+      arr[i] = Number(data[i] / factor)
     }
     return arr
   }
@@ -146,13 +146,13 @@ export function parseDecimal(bytes) {
 /**
  * @import {DecodedArray, Encoding, SchemaElement} from '../src/types.d.ts'
  * @param {bigint} value
- * @returns {Date}
+ * @returns {number}
  */
 function parseInt96Date(value) {
   const days = Number((value >> 64n) - 2440588n)
   const nano = Number((value & 0xffffffffffffffffn) / 1000000n)
   const millis = days * dayMillis + nano
-  return new Date(millis)
+  return millis
 }
 
 /**

@@ -82,7 +82,7 @@ describe('convert function', () => {
     const data = [1, 2] // days since epoch
     /** @type {SchemaElement} */
     const schemaElement = { name, converted_type: 'DATE' }
-    expect(convert(data, schemaElement)).toEqual([new Date(86400000), new Date(86400000 * 2)])
+    expect(convert(data, schemaElement)).toEqual([new Date(86400000).getTime(), new Date(86400000 * 2).getTime()])
   })
 
   it('converts INT96 to DATE', () => {
@@ -90,7 +90,7 @@ describe('convert function', () => {
     const data = [45284764452596988585705472n, 45284764452597048585705472n]
     /** @type {SchemaElement} */
     const schemaElement = { name, type: 'INT96' }
-    expect(convert(data, schemaElement)).toEqual([new Date('2009-03-01T00:00:00.000Z'), new Date('2009-03-01T00:01:00.000Z')])
+    expect(convert(data, schemaElement)).toEqual([new Date('2009-03-01T00:00:00.000Z').getTime(), new Date('2009-03-01T00:01:00.000Z').getTime()])
   })
 
   it('converts epoch time to TIMESTAMP_MILLIS', () => {
@@ -98,7 +98,7 @@ describe('convert function', () => {
     /** @type {SchemaElement} */
     const schemaElement = { name, converted_type: 'TIMESTAMP_MILLIS' }
     expect(convert(data, schemaElement)).toEqual([
-      new Date('2024-05-23T23:28:20.000Z'), new Date('2024-05-23T23:30:00.000Z'),
+      new Date('2024-05-23T23:28:20.000Z').getTime(), new Date('2024-05-23T23:30:00.000Z').getTime(),
     ])
   })
 
@@ -107,7 +107,7 @@ describe('convert function', () => {
     /** @type {SchemaElement} */
     const schemaElement = { name, converted_type: 'TIMESTAMP_MICROS' }
     expect(convert(data, schemaElement)).toEqual([
-      new Date('2024-05-23T23:28:20.000Z'), new Date('2024-05-23T23:30:00.000Z'),
+      new Date('2024-05-23T23:28:20.000Z').getTime(), new Date('2024-05-23T23:30:00.000Z').getTime(),
     ])
   })
 
@@ -139,7 +139,7 @@ describe('convert function', () => {
     /** @type {SchemaElement} */
     const schemaElement = { name, logical_type: { type: 'TIMESTAMP', isAdjustedToUTC: true, unit: 'MICROS' } }
     expect(convert(data, schemaElement)).toEqual([
-      new Date('2024-05-23T23:28:20.000Z'), new Date('2024-05-23T23:30:00.000Z'),
+      new Date('2024-05-23T23:28:20.000Z').getTime(), new Date('2024-05-23T23:30:00.000Z').getTime(),
     ])
   })
 
