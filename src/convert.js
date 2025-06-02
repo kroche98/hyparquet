@@ -32,9 +32,13 @@ export function convertWithDictionary(data, dictionary, schemaElement, encoding,
  * @param {DecodedArray} data series of primitive types
  * @param {SchemaElement} schemaElement
  * @param {boolean} [utf8] decode bytes as utf8?
+ * @param {(value: number) => any} [parseTimestamp] optional callback to parse timestamp from number
+ * @param {(value: number) => any} [parseDate] optional callback to parse date from number
  * @returns {DecodedArray} series of rich types
  */
-export function convert(data, schemaElement, utf8 = true) {
+export function convert(data, schemaElement, utf8 = true, parseTimestamp = undefined, parseDate = undefined) {
+  parseTimestamp ??= value => new Date(value)
+  parseDate ??= value => new Date(value * dayMillis)
   const { type, converted_type: ctype, logical_type: ltype } = schemaElement
   if (ctype === 'DECIMAL') {
     const scale = schemaElement.scale || 0
@@ -50,26 +54,26 @@ export function convert(data, schemaElement, utf8 = true) {
     return arr
   }
   if (!ctype && type === 'INT96') {
-    return Array.from(data).map(parseInt96Date)
+    return Array.from(data).map((value) => parseTimestamp(parseInt96Date(value)))
   }
   if (ctype === 'DATE') {
     const arr = new Array(data.length)
     for (let i = 0; i < arr.length; i++) {
-      arr[i] = data[i]
+      arr[i] = parseDate(data[i])
     }
     return arr
   }
   if (ctype === 'TIMESTAMP_MILLIS') {
     const arr = new Array(data.length)
     for (let i = 0; i < arr.length; i++) {
-      arr[i] = Number(data[i])
+      arr[i] = parseTimestamp(Number(data[i]))
     }
     return arr
   }
   if (ctype === 'TIMESTAMP_MICROS') {
     const arr = new Array(data.length)
     for (let i = 0; i < arr.length; i++) {
-      arr[i] = Number(data[i] / 1000n)
+      arr[i] = parseTimestamp(Number(data[i] / 1000n))
     }
     return arr
   }
@@ -117,7 +121,7 @@ export function convert(data, schemaElement, utf8 = true) {
     if (unit === 'NANOS') factor = 1000000n
     const arr = new Array(data.length)
     for (let i = 0; i < arr.length; i++) {
-      arr[i] = Number(data[i] / factor)
+      arr[i] = parseTimestamp(Number(data[i] / factor))
     }
     return arr
   }

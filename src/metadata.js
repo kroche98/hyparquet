@@ -5,6 +5,8 @@ import { deserializeTCompactProtocol } from './thrift.js'
 
 export const defaultInitialFetchSize = 1 << 19 // 512kb
 
+const dayMillis = 86400000 // 1 day in milliseconds
+
 /**
  * Read parquet metadata from an async buffer.
  *
@@ -267,9 +269,13 @@ function convertStats(stats, schema) {
 /**
  * @param {Uint8Array | undefined} value
  * @param {SchemaElement} schema
+ * @param {(value: number) => any} [parseTimestamp] optional callback to parse timestamp from number
+ * @param {(value: number) => any} [parseDate] optional callback to parse date from number
  * @returns {MinMaxType | undefined}
  */
-export function convertMetadata(value, schema) {
+export function convertMetadata(value, schema, parseTimestamp = undefined, parseDate = undefined) {
+  parseTimestamp ??= value => new Date(value)
+  parseDate ??= value => new Date(value * dayMillis)
   const { type, converted_type, logical_type } = schema
   if (value === undefined) return value
   if (type === 'BOOLEAN') return value[0] === 1
@@ -277,12 +283,12 @@ export function convertMetadata(value, schema) {
   const view = new DataView(value.buffer, value.byteOffset, value.byteLength)
   if (type === 'FLOAT' && view.byteLength === 4) return view.getFloat32(0, true)
   if (type === 'DOUBLE' && view.byteLength === 8) return view.getFloat64(0, true)
-  if (type === 'INT32' && converted_type === 'DATE') return view.getInt32(0, true)
-  if (type === 'INT64' && converted_type === 'TIMESTAMP_MICROS') return Number(view.getBigInt64(0, true) / 1000n)
-  if (type === 'INT64' && converted_type === 'TIMESTAMP_MILLIS') return Number(view.getBigInt64(0, true))
-  if (type === 'INT64' && logical_type?.type === 'TIMESTAMP' && logical_type?.unit === 'NANOS') return Number(view.getBigInt64(0, true) / 1000000n)
-  if (type === 'INT64' && logical_type?.type === 'TIMESTAMP' && logical_type?.unit === 'MICROS') return Number(view.getBigInt64(0, true) / 1000n)
-  if (type === 'INT64' && logical_type?.type === 'TIMESTAMP') return Number(view.getBigInt64(0, true))
+  if (type === 'INT32' && converted_type === 'DATE') return parseDate(view.getInt32(0, true))
+  if (type === 'INT64' && converted_type === 'TIMESTAMP_MICROS') return parseTimestamp(Number(view.getBigInt64(0, true) / 1000n))
+  if (type === 'INT64' && converted_type === 'TIMESTAMP_MILLIS') return parseTimestamp(Number(view.getBigInt64(0, true)))
+  if (type === 'INT64' && logical_type?.type === 'TIMESTAMP' && logical_type?.unit === 'NANOS') return parseTimestamp(Number(view.getBigInt64(0, true) / 1000000n))
+  if (type === 'INT64' && logical_type?.type === 'TIMESTAMP' && logical_type?.unit === 'MICROS') return parseTimestamp(Number(view.getBigInt64(0, true) / 1000n))
+  if (type === 'INT64' && logical_type?.type === 'TIMESTAMP') return parseTimestamp(Number(view.getBigInt64(0, true)))
   if (type === 'INT32' && view.byteLength === 4) return view.getInt32(0, true)
   if (type === 'INT64' && view.byteLength === 8) return view.getBigInt64(0, true)
   if (converted_type === 'DECIMAL') return parseDecimal(value) * 10 ** -(schema.scale || 0)
